@@ -160,7 +160,48 @@ function emit_endgame_event () {
 }
 
 function end_game_flow () {
+	var isHighScore = (score > high_score),
+			end_msg = get_end_message(score, isHighScore);
+
+	this._countdown.setText(''); //clear countdown text
+	//resize scoreboard text to fit everything
+	this._scoreboard.updateOpts({
+		text: '',
+		x: 10,
+		fontSize: 17,
+		verticalAlign: 'top',
+		textAlign: 'left',
+		multiline: true
+	});
+
+	//check for high-score and do appropriate animation
+	if (isHighScore) {
+		high_score = score;
+		this._molehills.forEach(function (molehill) {
+			molehill.endAnimation();
+		});
+	} else {
+		var i = (this._molehills.length-1) / 2 | 0; //just center mole
+		this._molehills[i].endAnimation(true);
+	}
+
+	this._scoreboard.setText(end_msg);
+
 	setTimeout(bind(this, emit_endgame_event), 2000);
+}
+
+function get_end_message (score, isHighScore) {
+	var moles = (score === 1) ? text.MOLE : text.MOLES,
+			end_msg = text.END_MSG_START + ' ' + score + ' ' + moles + '.\n';
+
+	if (isHighScore) {
+		end_msg += text.HIGH_SCORE + '\n';
+	} else {
+		//random taunt
+		var i = (Math.random() * text.taunts.length) | 0;
+		end_msg += text.taunts[i] + '\n';
+	}
+	return (end_msg += text.END_MSG_END);
 }
 
 /* Reset game counters and assets.
@@ -169,6 +210,23 @@ function reset_game () {
 	score = 0;
 	countdown_secs = game_length / 1000;
 	this._scoreboard.setText('');
+
+	//重置鼹鼠
+	this._molehills.forEach(function (molehill) {
+		molehill.resetMole();
+	});
+
+	this._scoreboard.updateOpts({
+		x: 0,
+		fontSize: 38,
+		verticalAlign: 'middle',
+		textAlign: 'center',
+		multiline: false
+	});
+	this._countdown.updateOpts({
+		visible: false,
+		color: '#fff'
+	});
 	
 }
 
@@ -188,13 +246,26 @@ var localized_strings = {
 		READY: "准备好了吗 ...",
 		SET: "拿好你的武器 ...",
 		GO: "小心！怪兽正在来临!",
-		MOLE: "mole",
-		MOLES: "moles",
-		END_MSG_START: "You whacked",
-		END_MSG_END: "Tap to play again",
-		HIGH_SCORE: "That's a new high score!"
+		MOLE: "怪兽",
+		MOLES: "怪兽",
+		END_MSG_START: "游戏结束了!",
+		END_MSG_END: "点击，重玩",
+		HIGH_SCORE: "你是非人类吗!破纪录了"
 	}
 };
+
+localized_strings['zh'].taunts = [
+	"欢迎来到summit的游戏世界.", //max length
+	"你太水了!",
+	"你永远也不会抓到我!",
+	"人类，我们会记住你的.",
+	"玩游戏也不要忘记和家人一起吃饭o~.",
+	"仅是按一下屏幕，并没有那么难吧.",
+	"很不幸，你是我见过最笨的玩家.",
+	"你正在浪费我的时间.",
+	"不要埋怨这位猪一样的队友，是游戏的问题.",
+	"快滚回你的地球!"
+];
 
 localized_strings['en'].taunts = [
 	"Welcome to Loserville, population: you.", //max length
