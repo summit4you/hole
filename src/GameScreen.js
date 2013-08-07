@@ -3,6 +3,7 @@ import animate;
 import ui.View;
 import ui.ImageView;
 import ui.TextView;
+import src.MoleHill as MoleHill;
 
 var score = 0,
 		high_score = 19,
@@ -60,6 +61,30 @@ exports = Class(ui.View, function(supr){
 		    opacity: 0.7
 		});
 
+		var x_offset = 5;
+		var y_offset = 160;
+		var y_pad = 25;
+		var layout = [[1, 0, 1], [0, 1, 0], [1, 0, 1]];
+
+		this.style.width = 320;
+		this.style.height = 480;
+
+		this._molehills = [];
+
+		for (var row = 0, len = layout.length; row < len; row++) {
+			for (var col = 0; col < len; col++) {
+				if (layout[row][col] !== 0) {
+					var molehill = new MoleHill();
+					molehill.style.x = x_offset + col * molehill.style.width;
+					molehill.style.y = y_offset + row * (molehill.style.height + y_pad);
+					this.addSubview(molehill);
+					this._molehills.push(molehill);
+
+					
+				}
+			}
+		}
+
 	};
 
 	
@@ -90,6 +115,11 @@ function play_game () {
 	    setTimeout(bind(this, end_game_flow), mole_interval * 2);
 	    this._countdown.setText(":00");
 	  }), game_length);
+
+	setTimeout(bind(this, function () {
+		this._scoreboard.setText(score.toString());
+		this._countdown.style.visible = true;
+	}), game_length * 0.25); // 每5秒更新一次
 }
 
 function update_countdown () {
