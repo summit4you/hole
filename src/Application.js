@@ -3,6 +3,7 @@ import ui.StackView as StackView;
 
 import src.TitleScreen as TitleScreen;
 import src.GameScreen as GameScreen;
+import src.soundcontroller as soundcontroller;
 
 exports = Class(GC.Application, function () {
 
@@ -25,13 +26,18 @@ exports = Class(GC.Application, function () {
 	
 	    rootView.push(titlescreen);
 
+	    var sound = soundcontroller.getSound();
+
 	    titlescreen.on('titlescreen:start', function () {
 		  //...
+		  sound.play('levelmusic');
+		  console.log(sound);
 		  rootView.push(gamescreen);
 		  gamescreen.emit('app:start');
 		});
 
 		gamescreen.on('gamescreen:end', function () {
+		  sound.stop('levelmusic');
 	      rootView.pop();
 	    });
 

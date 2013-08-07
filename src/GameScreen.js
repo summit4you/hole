@@ -5,6 +5,7 @@ import ui.ImageView;
 import ui.TextView;
 import src.MoleHill as MoleHill;
 
+
 var score = 0,
 		high_score = 19,
 		hit_value = 1,
