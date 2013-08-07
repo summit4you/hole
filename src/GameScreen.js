@@ -80,7 +80,13 @@ exports = Class(ui.View, function(supr){
 					this.addSubview(molehill);
 					this._molehills.push(molehill);
 
-					
+					//update score on hit event
+					molehill.on('molehill:hit', bind(this, function () {
+						if (game_on) {
+							score = score + hit_value;
+							this._scoreboard.setText(score.toString());
+						}
+					}));
 				}
 			}
 		}
@@ -108,10 +114,12 @@ function start_game_flow(){
 
 function play_game () {
 	var i = setInterval(bind(this, update_countdown), 1000);
+	var j = setInterval(tick.bind(this), mole_interval); // 定时弹鼹鼠
 	//when the game is up reset all timers, flags and countdown
 	setTimeout(bind(this, function () {
 	    game_on = false;
 	    clearInterval(i);
+	    clearInterval(j);
 	    setTimeout(bind(this, end_game_flow), mole_interval * 2);
 	    this._countdown.setText(":00");
 	  }), game_length);
@@ -120,6 +128,23 @@ function play_game () {
 		this._scoreboard.setText(score.toString());
 		this._countdown.style.visible = true;
 	}), game_length * 0.25); // 每5秒更新一次
+
+	//Running out of time! Set countdown timer red.
+	setTimeout(bind(this, function () {
+		this._countdown.updateOpts({color: '#CC0066'});
+	}), game_length * 0.75);
+}
+
+/* Pick a random, non-active, mole from our molehills.
+ */
+function tick () {
+	var len = this._molehills.length,
+			molehill = this._molehills[Math.random() * len | 0];
+
+	while (molehill.activeMole) {
+		molehill = this._molehills[Math.random() * len | 0];
+	}
+	molehill.showMole();
 }
 
 function update_countdown () {

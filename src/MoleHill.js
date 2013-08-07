@@ -26,6 +26,70 @@ exports = Class(ui.View, function (supr) {
 		this.build();
 	};
 
+	/* Set the mole as active and animate it up.
+	 */
+	this.showMole = function () {
+		if (this.activeMole === false) {
+			this.activeMole = true;
+			this.activeInput = true;
+
+			this._animator.now({y: mole_up}, 500, animate.easeIn)
+				.wait(1000).then(bind(this, function () {
+					this.activeInput = false;
+				})).then({y: mole_down}, 200, animate.easeOut)
+				.then(bind(this, function () {
+					this.activeMole = false;
+				}));
+		}
+	};
+
+	/* Set mole as inactive and animate it down.
+	 */
+	this.hitMole = function () {
+		if (this.activeMole && this.activeInput) {
+			this.activeInput = false;
+
+			this._animator.clear()
+				.now((function () {
+					this._moleview.setImage(mole_hit_img);
+				}).bind(this))
+				.then({y: mole_down}, 1500)
+				.then(bind(this, function () {
+					this._moleview.setImage(mole_normal_img);
+					this.activeMole = false;
+					this.activeInput = false;
+				}));
+		}
+	};
+
+	/* Ending animation, pop up and "laugh"
+	 */
+	this.endAnimation = function () {
+		this.activeInput = false;
+		this._animator.then({y: mole_up}, 2000)
+			.then(bind(this, function () {
+				this._interval = setInterval(bind(this, function () {
+					if (this._moleview.getImage() === mole_normal_img) {
+						this._moleview.setImage(mole_hit_img);
+					} else {
+						this._moleview.setImage(mole_normal_img);
+					}
+				}), 100);
+			}));
+	};
+
+	/* Rest the molehill properties for the next game.
+	 */
+	this.resetMole = function () {
+		clearInterval(this._interval);
+		this._animator.clear();
+		this._moleview.style.y = mole_down;
+		this._moleview.setImage(mole_normal_img);
+		this.activeMole = false;
+		this.activeInput = false;
+	};
+
+
 	this.build = function () {
 
 		var hole_back = new ui.ImageView({
@@ -64,6 +128,20 @@ exports = Class(ui.View, function (supr) {
 			width: hole_front_img.getWidth(),
 			height: hole_front_img.getHeight()
 		});
+
+		// 让鼹鼠动
+		this._animator = animate(this._moleview);
+
+		this._interval = null;
+
+		
+
+		this._inputview.on('InputSelect', bind(this, function () {
+			if (this.activeInput) {
+				this.emit('molehill:hit');
+				this.hitMole();
+			}
+		}));
 	};
 
 });
